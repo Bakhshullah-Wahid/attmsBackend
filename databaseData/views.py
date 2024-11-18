@@ -1,8 +1,8 @@
 # core/views.py
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
-from .models import Department, Class, User, Teacher
-from .serializers import DepartmentSerializer, ClassSerializer, UserSerializer, TeacherSerializer
+from .models import Department, Class, User, Teacher , Subject
+from .serializers import DepartmentSerializer, ClassSerializer, UserSerializer, TeacherSerializer,SubjectSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +13,35 @@ from django.utils.crypto import get_random_string
 from django.conf import settings
 from .models import EmailVerification 
 
+
+class SubjectView(APIView):
+     def get(self, request, pk=None):
+        if pk:  # If a specific department ID is provided
+            subject = get_object_or_404(Subject, pk=pk)
+            serializer = SubjectSerializer(subject)
+            return Response(serializer.data)
+        else:  # If no ID is provided, list all departments
+            subject = Subject.objects.all()
+            serializer = SubjectSerializer(subject, many=True)
+            return Response(serializer.data)
+     def put(self, request, pk):
+        teachers = get_object_or_404(Subject, pk=pk)
+        serializer = SubjectSerializer(teachers, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response('Subject updated successfully.')
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+     def post(self, request):
+        serializer = SubjectSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+     def delete(self, request, pk):
+        subject = get_object_or_404(Subject, pk=pk)
+        subject.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+# -------------------------------------------------------------------------------------------------
 
 class TeacherView(APIView):
      def get(self, request, pk=None):

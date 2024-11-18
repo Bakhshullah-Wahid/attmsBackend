@@ -47,7 +47,20 @@ class Teacher(models.Model):
     )
     def __str__(self):
         return self.teacher_name
+    #changes made from here ---------------------------------------------
+class Subject(models.Model):
+    subject_id=models.AutoField(primary_key=True)
+    subject_name=models.CharField(max_length=100)
+    theory=models.IntegerField()
+    lab =models.IntegerField()
+    course_module = models.CharField(max_length=100)
+    teacher_id=models.ForeignKey(Teacher , on_delete=models.SET_NULL, null=True , blank=True)
+    department_id=models.ForeignKey(Department,on_delete=models.CASCADE)
+    def __str__(self):
+        return self.subject_name
     
+#--------------------------------------------------------------------------------
+
 class EmailVerification(models.Model):
     email = models.EmailField(unique=True)
     token = models.CharField(max_length=50, unique=True)

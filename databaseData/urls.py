@@ -21,7 +21,11 @@ urlpatterns = [
      path('teachers/',views.TeacherView.as_view()),
      path('teachers/update/<int:pk>/' , views.TeacherView.as_view() , name='update-teachers') ,
        path('teachers/delete/<int:pk>/' , views.TeacherView.as_view() , name='delete-teacher'),
-
+ #subjects path setup
+    
+     path('subjects/',views.SubjectView.as_view()),
+     path('subjects/update/<int:pk>/' , views.SubjectView.as_view() , name='update-subjects') ,
+       path('subjects/delete/<int:pk>/' , views.SubjectView.as_view() , name='delete-subjects'),
        #email verification
        path('verify-email/', views.verify_email, name='verify_email'),
        path('initiate-email-verification/', views.initiate_email_verification, name='initiate_email_verification'),
