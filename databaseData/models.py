@@ -53,6 +53,7 @@ class Subject(models.Model):
     subject_name=models.CharField(max_length=100)
     theory=models.IntegerField()
     lab =models.IntegerField()
+    semester = models.CharField(max_length=100)
     course_module = models.CharField(max_length=100)
     teacher_id=models.ForeignKey(Teacher , on_delete=models.SET_NULL, null=True , blank=True)
     department_id=models.ForeignKey(Department,on_delete=models.CASCADE)
