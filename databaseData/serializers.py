@@ -1,6 +1,6 @@
 # core/serializers.py
 from rest_framework import serializers
-from .models import Department, Class, User, Teacher
+from .models import Department,Subject, Class, User, Teacher
 
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,4 +20,9 @@ class UserSerializer(serializers.ModelSerializer):
 class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher
+        fields = '__all__'
+# -------------------------------------------------------------
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
         fields = '__all__'
