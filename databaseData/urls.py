@@ -1,7 +1,7 @@
 # core/urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from . import views 
+from . import views
 
 urlpatterns = [
     path('departments/', views.DepartmentView.as_view()),
@@ -27,6 +27,13 @@ urlpatterns = [
      path('subjects/update/<int:pk>/' , views.SubjectView.as_view() , name='update-subjects') ,
        path('subjects/delete/<int:pk>/' , views.SubjectView.as_view() , name='delete-subjects'),
        #email verification
-       path('verify-email/', views.verify_email, name='verify_email'),
-       path('initiate-email-verification/', views.initiate_email_verification, name='initiate_email_verification'),
-]
+       path('send-email/', views.SendEmailView.as_view(), name='send_email'),
+       #freeClass Slots
+       path('free-class/',views.FreeClassView.as_view()),
+       path('class/delete/<int:class_id>/<str:free_slots>/<str:day_of_week>/', views.FreeClassView.as_view(), name='delete_slot'),
+      #  testing if it works
+       path('class/<int:class_id>/',views.ClassDetailView.as_view(), name='class-detail'),
+    path('scheduler/',views.SchedulerView.as_view()),
+    path('scheduler/<int:department_id>/', views.SchedulerView.as_view(), name='scheduler-by-department'),
+# -------------------------------------------------------------------------------------------------
+   ]

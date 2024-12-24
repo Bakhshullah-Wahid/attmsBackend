@@ -1,8 +1,8 @@
 # core/views.py
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
-from .models import Department, Class, User, Teacher , Subject
-from .serializers import DepartmentSerializer, ClassSerializer, UserSerializer, TeacherSerializer,SubjectSerializer
+from .models import *
+from .serializers import *
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,9 +11,77 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.utils.crypto import get_random_string
 from django.conf import settings
-from .models import EmailVerification 
+from .models import EmailVerification   
+from django.views import View
+from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.conf import settings
+# Serializer
+# ------------------------------------------------------------------------------------
+class ClassDetailView(APIView):
+    def get(self, request, class_id):
+        try:
+            # Fetch the class instance by `class_id`
+            class_instance = Class.objects.get(class_id=class_id)
+            
+            # Access related `free_slots` using the `related_name`
+            free_slots = class_instance.free_slots.all()
+            
+            # Prepare the response
+            return Response({
+                'id': class_instance.class_id,  # Use `class_id` for the primary key
+                'class_name': class_instance.class_name,
+                'free_slots': [
+                    {'id': slot.id, 'free_slots': slot.free_slots ,'day_of_week':slot.day_of_week ,} for slot in free_slots
+                ]
+            })
+        except Class.DoesNotExist:
+            return Response({'error': 'Class not found'}, status=404)
 
+# freeClasses
+class FreeClassView(APIView):
+    def get(self, request, pk=None):
+        if pk:  # If a specific department ID is provided
+            freeClass = get_object_or_404(FreeClassSlot, pk=pk)
+            serializer = FreeClassSerializer(freeClass)
+            return Response(serializer.data)
+        else:  # If no ID is provided, list all departments
+            freeClass = FreeClassSlot.objects.all()
+            serializer = FreeClassSerializer(freeClass, many=True)
+            return Response(serializer.data)
+    def post(self, request):
+        serializer = FreeClassSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, class_id, free_slots, day_of_week):
+        # Ensure the class_id, slot, and day_of_week are provided
+        if not class_id or not free_slots or not day_of_week:
+            return Response(
+                {"error": "Missing required fields: class_id, free_slots, day_of_week"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Filter and delete the records that match the given criteria
+        deleted_count, _ = FreeClassSlot.objects.filter(
+            class_id=class_id,
+            free_slots=free_slots,
+            day_of_week=day_of_week
+        ).delete()
+
+        # If no records were deleted, return a 404 error
+        if deleted_count == 0:
+            return Response(
+                {"error": "No matching records found to delete"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Return a 204 No Content status if records were successfully deleted
+        return Response(status=status.HTTP_204_NO_CONTENT)
+          # =========================================================================
+#subjects involved
 class SubjectView(APIView):
      def get(self, request, pk=None):
         if pk:  # If a specific department ID is provided
@@ -238,38 +306,61 @@ class DepartmentView(APIView):
 
 # Model for storing pending email verifications
 
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
-def initiate_email_verification(request):
-    email = request.GET.get('email')
-    if not email:
-        return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
+@method_decorator(csrf_exempt, name='dispatch')
+class SendEmailView(View):
+    def post(self, request, *args, **kwargs):
+        try:
+            message = request.POST.get('message')
+            email = request.POST.get('email')
+            name = request.POST.get('name')
 
-    # Generate a unique verification token
-    token = get_random_string(20)
-    verification, created = EmailVerification.objects.get_or_create(email=email, defaults={'token': token})
-    if not created:
-        verification.token = token
-        verification.save()
-    
-    # Send a verification email
-    verification_url = f'{settings.FRONTEND_URL}/verify-email/?token={token}'
-    send_mail(
-        'Verify your email',
-        f'Please confirm that this is your email by clicking on the following link: {verification_url}',
-        settings.DEFAULT_FROM_EMAIL,
-        [email],
-    )
-    return JsonResponse({'status': 'success', 'message': 'Verification email sent'})
+            if not (message and email and name):
+                return JsonResponse({'error': 'All fields are required.'}, status=400)
 
-def verify_email(request):
-    token = request.GET.get('token')
-    if not token:
-        return JsonResponse({'status': 'error', 'message': 'Token is required'}, status=400)
+            send_mail(
+                subject=f"Contact Form from {name}",
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,  # Ensure EMAIL_HOST_USER is configured in settings.py
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            return JsonResponse({'message': 'Email sent successfully!'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+# =============================================================================
 
-    try:
-        verification = EmailVerification.objects.get(token=token)
-        verification.is_verified = True
-        verification.save()
-        return JsonResponse({'status': 'success', 'message': 'Email verified successfully'})
-    except EmailVerification.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Invalid token'}, status=400)
+class SchedulerView(APIView):
+    def get(self, request, department_id=None):
+        # If department is provided, filter by it
+        if department_id:
+            scheduler = Scheduler.objects.filter(department_id=department_id)  # Filter by department field
+            if not scheduler.exists():  # If no matching records found, return 404
+                return Response({"error": "No scheduler found for the given department."}, status=status.HTTP_404_NOT_FOUND)
+            serializer = SchedulerSerializer(scheduler, many=True)
+            return Response(serializer.data)
+
+        # If no department provided, return all records
+        scheduler = Scheduler.objects.all()
+        serializer = SchedulerSerializer(scheduler, many=True)
+        return Response(serializer.data)
+    def put(self, request, pk):
+        scheduler = get_object_or_404(Scheduler, pk=pk)
+        serializer = SchedulerSerializer(scheduler, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response('Scheduler updated successfully.')
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+       
+        serializer = SchedulerSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, pk):
+        scheduler = get_object_or_404(Scheduler, pk=pk)
+        scheduler.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
