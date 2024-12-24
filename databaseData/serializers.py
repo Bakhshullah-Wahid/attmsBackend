@@ -1,7 +1,6 @@
 # core/serializers.py
 from rest_framework import serializers
-from .models import Department,Subject, Class, User, Teacher
-
+from .models import *
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
@@ -25,4 +24,14 @@ class TeacherSerializer(serializers.ModelSerializer):
 class SubjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subject
+        fields = '__all__'
+# --------------------------------------------------------------------------
+class FreeClassSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FreeClassSlot
+        fields = '__all__'
+#  ========================================
+class SchedulerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Scheduler
         fields = '__all__'
