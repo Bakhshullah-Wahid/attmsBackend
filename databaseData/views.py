@@ -360,7 +360,16 @@ class SchedulerView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    def delete(self, request, pk):
-        scheduler = get_object_or_404(Scheduler, pk=pk)
-        scheduler.delete()
+    def delete(self, request, department_id):
+        # Filter and delete all records that match the given department_id
+        deleted_count, _ = Scheduler.objects.filter(department_id=department_id).delete()
+
+        # If no records were deleted, return a 404 error
+        if deleted_count == 0:
+            return Response(
+                {"error": "No matching records found to delete"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Return a 204 No Content status if records were successfully deleted
         return Response(status=status.HTTP_204_NO_CONTENT)

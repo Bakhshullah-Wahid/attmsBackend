@@ -17,6 +17,8 @@ class Class(models.Model):
         
         related_name='classes'
     )
+    requested_by=models.CharField(max_length=100,blank=True)
+    given_to=models.CharField(max_length=100 , blank=True)
     def __str__(self):
         return f"{self.class_name} ({self.class_type})"
 
@@ -93,5 +95,7 @@ class Scheduler(models.Model):
     slot = models.CharField(max_length=10)
     semester = models.CharField(max_length=100)
     department_id = models.ForeignKey(Department, on_delete=models.CASCADE)
+    class_department = models.CharField(max_length=100 )
+    teacher_department = models.CharField(max_length=100 )
     def __str__(self):
         return f'{self.class_id} {self.subject_id} {self.teacher_id} {self.day_of_week} {self.slot} {self.semester}'
