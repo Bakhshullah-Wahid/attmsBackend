@@ -46,6 +46,8 @@ class Teacher(models.Model):
         on_delete=models.CASCADE,
         related_name='teachers'
     )
+    requested_by=models.CharField(max_length=100,blank=True)
+    given_to=models.CharField(max_length=100 , blank=True)
     def __str__(self):
         return self.teacher_name
     #changes made from here ---------------------------------------------

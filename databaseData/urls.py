@@ -13,6 +13,7 @@ urlpatterns = [
     path('classs/update/<int:pk>/' , views.ClasssView.as_view() , name='update-classs') ,
     #user path coordinator
     path('users/', views.UserView.as_view()),
+    path('users/<int:department_id>/',views.UserView.as_view()),
      path('users/update/<int:pk>/' , views.UserView.as_view() , name='update-users') ,
      path('users/delete/<int:pk>/' , views.UserView.as_view() , name='delete-users'),
 
@@ -35,5 +36,7 @@ urlpatterns = [
        path('class/<int:class_id>/',views.ClassDetailView.as_view(), name='class-detail'),
     path('scheduler/',views.SchedulerView.as_view()),
     path('scheduler/<int:department_id>/', views.SchedulerView.as_view(), name='scheduler-by-department'),
+
+     
 # -------------------------------------------------------------------------------------------------
    ]
