@@ -147,10 +147,11 @@ class UserView(APIView):
             serializer.save()
             return Response('User updated successfully.')
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    def get(self, request, pk=None):
-        if pk:  # If a specific department ID is provided
-            users = get_object_or_404(User, pk=pk)
-            serializer = UserSerializer(users)
+    def get(self, request, department_id=None):
+      
+        if department_id:
+            users = User.objects.filter(department_id=department_id) 
+            serializer = UserSerializer(users, many=True)
             return Response(serializer.data)
         else:  # If no ID is provided, list all departments
             users = User.objects.all()
@@ -321,8 +322,9 @@ class SendEmailView(View):
                 return JsonResponse({'error': 'All fields are required.'}, status=400)
 
             send_mail(
-                subject=f"Contact Form from {name}",
+                subject=f"Contact From {name}",
                 message=message,
+                
                 from_email=settings.EMAIL_HOST_USER,  # Ensure EMAIL_HOST_USER is configured in settings.py
                 recipient_list=[email],
                 fail_silently=False,
@@ -331,7 +333,6 @@ class SendEmailView(View):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 # =============================================================================
-
 class SchedulerView(APIView):
     def get(self, request, department_id=None):
         # If department is provided, filter by it
