@@ -335,13 +335,17 @@ class SendEmailView(View):
 # =============================================================================
 class SchedulerView(APIView):
     def get(self, request, department_id=None):
+        print(department_id)
         # If department is provided, filter by it
-        if department_id:
-            scheduler = Scheduler.objects.filter(department_id=department_id)  # Filter by department field
-            if not scheduler.exists():  # If no matching records found, return 404
-                return Response({"error": "No scheduler found for the given department."}, status=status.HTTP_404_NOT_FOUND)
-            serializer = SchedulerSerializer(scheduler, many=True)
-            return Response(serializer.data)
+        scheduler = Scheduler.objects.filter(department_id=department_id)
+
+    # Check if any records were found for the given department_id
+        if not scheduler.exists():
+            return Response({"error": "No scheduler found for the given department."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serialize the data if records are found
+        serializer = SchedulerSerializer(scheduler, many=True)
+        return Response(serializer.data)
 
         # If no department provided, return all records
         scheduler = Scheduler.objects.all()
